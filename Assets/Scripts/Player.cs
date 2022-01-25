@@ -9,15 +9,16 @@ public class Player : MonoBehaviour
     private Vector3 moveDelta;
     private RaycastHit2D hit;
 
+    public float dashDistance;
     private void Start()
     {
-        boxCollider = GetComponent < BoxCollider2D>();
-                
+        boxCollider = GetComponent < BoxCollider2D>();       
     }
     private void FixedUpdate()
     {
         float x = Input.GetAxisRaw("Horizontal");
         float y = Input.GetAxisRaw("Vertical");
+
         //Reset moveDelta
         moveDelta = new Vector3(x,y,0);
 
@@ -26,6 +27,7 @@ public class Player : MonoBehaviour
             transform.localScale = Vector3.one;
         else if(moveDelta.x < 0)
             transform.localScale = new Vector3(-1,1,1);
+
         //move in this direction by casting box there first, if box == null, free to move
         hit = Physics2D.BoxCast(transform.position, boxCollider.size, 0, new Vector2(0, moveDelta.y), Mathf.Abs(moveDelta.y * Time.deltaTime), LayerMask.GetMask("Player", "Blocking"));
         if (hit.collider == null)
@@ -40,5 +42,23 @@ public class Player : MonoBehaviour
             //movement
             transform.Translate(moveDelta.x * Time.deltaTime, 0, 0);
         }
-    } 
+        //dash
+        //weirdly works somehow just like randomly teleports me 0.25 in direction where moving, very inconsistent
+        if (Input.GetKeyDown(KeyCode.Space) && hit.collider == null)
+        {
+            if(moveDelta.x > 0)
+            {
+                transform.Translate(moveDelta.x * Time.deltaTime + dashDistance, 0, 0);
+            }else if(moveDelta.x < 0)
+            {
+                transform.Translate(moveDelta.x * Time.deltaTime - dashDistance, 0, 0);
+            }else if(moveDelta.y > 0)
+            {
+                transform.Translate(0, moveDelta.y * Time.deltaTime + dashDistance, 0);
+            }else if(moveDelta.y < 0)
+            {
+                transform.Translate(0, moveDelta.y * Time.deltaTime - dashDistance, 0);
+            }
+        }
+    }
 }
