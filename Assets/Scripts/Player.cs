@@ -5,17 +5,52 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    private BoxCollider2D boxCollider;
-    private Vector3 moveDelta;
-    private RaycastHit2D hit;
+    public float moveSpeed = 50f;
+    [SerializeField] private LayerMask dashLayerMask;
+    //private BoxCollider2D boxCollider;
+    private Vector3 moveDir;
+    //private RaycastHit2D hit;
+    private Rigidbody2D rigidbody2D;
+    private bool isDashButtonDown;
 
-    public float dashDistance;
+    private void Awake()
+    {
+        rigidbody2D = GetComponent<Rigidbody2D>();
+    }
     private void Start()
     {
-        boxCollider = GetComponent < BoxCollider2D>();       
+        //boxCollider = GetComponent < BoxCollider2D>();       
+    }
+    private void Update()
+    {
+        float moveX = 0f;
+        float moveY = 0f;
+        if (Input.GetKey(KeyCode.W))
+        {
+            moveY = +1f;
+        }
+        if (Input.GetKey(KeyCode.S))
+        {
+            moveY = -1f;
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+            moveX = +1f;
+        }
+        if (Input.GetKey(KeyCode.A))
+        {
+            moveX = -1f;
+        }
+        moveDir = new Vector3(moveX, moveY).normalized;
+
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            isDashButtonDown = true;
+        }
     }
     private void FixedUpdate()
     {
+        /*
         float x = Input.GetAxisRaw("Horizontal");
         float y = Input.GetAxisRaw("Vertical");
 
@@ -42,23 +77,24 @@ public class Player : MonoBehaviour
             //movement
             transform.Translate(moveDelta.x * Time.deltaTime, 0, 0);
         }
-        //dash
-        //weirdly works somehow just like randomly teleports me 0.25 in direction where moving, very inconsistent
-        if (Input.GetKeyDown(KeyCode.Space) && hit.collider == null)
+        */
+
+        rigidbody2D.velocity = moveDir * moveSpeed;
+        
+        if (isDashButtonDown)
         {
-            if(moveDelta.x > 0)
+            float dashAmount = 0.5f;
+            Vector3 dashPosition = transform.position + moveDir * dashAmount;
+
+            RaycastHit2D raycastHit2D = Physics2D.Raycast(transform.position, moveDir, dashAmount, dashLayerMask);
+            if(raycastHit2D.collider != null)
             {
-                transform.Translate(moveDelta.x * Time.deltaTime + dashDistance, 0, 0);
-            }else if(moveDelta.x < 0)
-            {
-                transform.Translate(moveDelta.x * Time.deltaTime - dashDistance, 0, 0);
-            }else if(moveDelta.y > 0)
-            {
-                transform.Translate(0, moveDelta.y * Time.deltaTime + dashDistance, 0);
-            }else if(moveDelta.y < 0)
-            {
-                transform.Translate(0, moveDelta.y * Time.deltaTime - dashDistance, 0);
+                dashPosition = raycastHit2D.point;
             }
+
+            rigidbody2D.MovePosition(dashPosition);
+            isDashButtonDown = false; 
         }
+        
     }
 }
